@@ -1,0 +1,45 @@
+{
+  "name": "olx-cli",
+  "version": "1.0.0",
+  "description": "Busque anúncios do OLX Brasil direto pelo terminal",
+  "main": "dist/cli.js",
+  "bin": {
+    "olx": "dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "olx",
+    "brazil",
+    "classifieds",
+    "scraper",
+    "cli",
+    "search"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "cheerio": "^1.2.0",
+    "cli-table3": "^0.6.5",
+    "commander": "^14.0.3",
+    "cycletls": "^2.0.5",
+    "strip-ansi": "^7.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.2",
+    "tsup": "^8.4.0",
+    "typescript": "^5.8.3"
+  }
+}
