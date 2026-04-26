@@ -1,6 +1,6 @@
 {
-  "name": "olx-cli",
-  "version": "1.0.0",
+  "name": "@lucaspon/olx-cli",
+  "version": "1.0.1",
   "description": "Busque anúncios do OLX Brasil direto pelo terminal",
   "main": "dist/cli.js",
   "bin": {

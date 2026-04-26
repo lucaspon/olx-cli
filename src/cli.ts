@@ -176,4 +176,41 @@ program
     }
   })
 
+program.addHelpText('after', `
+Commands & Options
+──────────────────
+
+  search [query]
+    -u, --url <url>            Use a raw OLX search URL instead of building one
+    -c, --category <cat>       Category slug (e.g. informatica, imoveis, eletronicos)
+    --min-price <n>            Minimum price filter (R$)
+    --max-price <n>            Maximum price filter (R$)
+    --condition <new|used>     Condition filter
+    --filter-substring <text>  Exclude ads whose title contains this text
+    -p, --pages <n>            Number of pages to fetch (default: 1)
+    -l, --limit <n>            Maximum number of ads to return
+    -f, --format <format>      Output format: table (default), json, csv
+    -s, --sort <sort>          Sort results: price-asc, price-desc, date
+
+  multisearch <queries...>
+    -c, --category <cat>       Category slug (e.g. informatica, imoveis, eletronicos)
+    --min-price <n>            Minimum price filter (R$)
+    --max-price <n>            Maximum price filter (R$)
+    --condition <new|used>     Condition filter
+    --filter-substring <text>  Exclude ads whose title contains this text
+    -p, --pages <n>            Pages per search (default: 1)
+    -l, --limit <n>            Max ads per search
+    -s, --sort <sort>          Sort results: price-asc, price-desc, date
+
+Examples
+────────
+
+  olx search "rtx 4090"
+  olx search "playstation 5" --min-price 2000 --max-price 3500 --condition used
+  olx search "macbook pro" --pages 3 --format json
+  olx search --url "https://www.olx.com.br/informatica/placas-de-video?q=rtx+4090"
+  olx search "iphone" --category eletronicos --sort price-asc
+  olx multisearch "iphone 15" "iphone 14" "iphone 13" --pages 1 --limit 10
+`)
+
 program.parse()
