@@ -19,7 +19,7 @@ export interface SearchOptions {
   limit?: number
   format: 'table' | 'json' | 'csv'
   sort?: 'price-asc' | 'price-desc' | 'date'
-  filterSubstring?: string
+  filterSubstrings?: string[]
 }
 
 export interface RawOlxAd {

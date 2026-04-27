@@ -8,6 +8,41 @@ import { mean, median, stdDev, min, max } from './stats.js'
 import { formatCurrency } from './utils.js'
 import type { SearchOptions, Ad } from './types.js'
 
+function parseFilterSubstrings(value: string): string[] {
+  const trimmed = value.trim()
+  if (!trimmed) return []
+
+  // Handle JSON-like array format: ["str1","str2"] or ['str1','str2']
+  if (trimmed.startsWith('[') && trimmed.endsWith(']')) {
+    const inner = trimmed.slice(1, -1)
+    if (!inner.trim()) return []
+    return inner
+      .split(',')
+      .map((s) => s.trim().replace(/^["']|["']$/g, ''))
+      .filter((s) => s.length > 0)
+  }
+
+  // Fallback: comma-separated list
+  return trimmed
+    .split(',')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0)
+}
+
+function buildFilterSubstrings(
+  substrings?: string[],
+  legacySubstring?: string
+): string[] | undefined {
+  const result: string[] = []
+  if (substrings && substrings.length > 0) {
+    result.push(...substrings)
+  }
+  if (legacySubstring) {
+    result.push(legacySubstring)
+  }
+  return result.length > 0 ? result : undefined
+}
+
 const program = new Command()
 
 program
@@ -23,7 +58,8 @@ program
   .option('--min-price <price>', 'Minimum price filter (R$)', parseFloat)
   .option('--max-price <price>', 'Maximum price filter (R$)', parseFloat)
   .option('--condition <condition>', 'Condition filter: new or used')
-  .option('--filter-substring <text>', 'Exclude ads whose title contains this text')
+  .option('--filter-substring <text>', 'Exclude ads whose title contains this text (legacy)')
+  .option('--filter-substrings <strings>', 'Exclude ads whose title contains any of these substrings (e.g. ["str1","str2"])', parseFilterSubstrings)
   .option('-p, --pages <n>', 'Number of pages to fetch', parseInt, 1)
   .option('-l, --limit <n>', 'Maximum number of ads to return', parseInt)
   .option('-f, --format <format>', 'Output format: table, json, or csv', 'table')
@@ -54,7 +90,10 @@ program
         minPrice: options.minPrice as number | undefined,
         maxPrice: options.maxPrice as number | undefined,
         condition: condition as 'new' | 'used' | undefined,
-        filterSubstring: options.filterSubstring as string | undefined,
+        filterSubstrings: buildFilterSubstrings(
+          options.filterSubstrings as string[] | undefined,
+          options.filterSubstring as string | undefined
+        ),
         pages: options.pages as number,
         limit: options.limit as number | undefined,
         format: format as 'table' | 'json' | 'csv',
@@ -103,7 +142,8 @@ program
   .option('--min-price <price>', 'Minimum price filter (R$)', parseFloat)
   .option('--max-price <price>', 'Maximum price filter (R$)', parseFloat)
   .option('--condition <condition>', 'Condition filter: new or used')
-  .option('--filter-substring <text>', 'Exclude ads whose title contains this text')
+  .option('--filter-substring <text>', 'Exclude ads whose title contains this text (legacy)')
+  .option('--filter-substrings <strings>', 'Exclude ads whose title contains any of these substrings (e.g. ["str1","str2"])', parseFilterSubstrings)
   .option('-p, --pages <n>', 'Number of pages to fetch per search', parseInt, 1)
   .option('-l, --limit <n>', 'Maximum number of ads per search', parseInt)
   .option('-s, --sort <sort>', 'Sort results: price-asc, price-desc, or date')
@@ -125,7 +165,10 @@ program
         minPrice: options.minPrice as number | undefined,
         maxPrice: options.maxPrice as number | undefined,
         condition: condition as 'new' | 'used' | undefined,
-        filterSubstring: options.filterSubstring as string | undefined,
+        filterSubstrings: buildFilterSubstrings(
+          options.filterSubstrings as string[] | undefined,
+          options.filterSubstring as string | undefined
+        ),
         pages: options.pages as number,
         limit: options.limit as number | undefined,
         format: 'table',
@@ -186,7 +229,8 @@ Commands & Options
     --min-price <n>            Minimum price filter (R$)
     --max-price <n>            Maximum price filter (R$)
     --condition <new|used>     Condition filter
-    --filter-substring <text>  Exclude ads whose title contains this text
+    --filter-substring <text>  Exclude ads whose title contains this text (legacy)
+    --filter-substrings <strs> Exclude ads whose title contains any substring (e.g. ["str1","str2"])
     -p, --pages <n>            Number of pages to fetch (default: 1)
     -l, --limit <n>            Maximum number of ads to return
     -f, --format <format>      Output format: table (default), json, csv
@@ -197,7 +241,8 @@ Commands & Options
     --min-price <n>            Minimum price filter (R$)
     --max-price <n>            Maximum price filter (R$)
     --condition <new|used>     Condition filter
-    --filter-substring <text>  Exclude ads whose title contains this text
+    --filter-substring <text>  Exclude ads whose title contains this text (legacy)
+    --filter-substrings <strs> Exclude ads whose title contains any substring (e.g. ["str1","str2"])
     -p, --pages <n>            Pages per search (default: 1)
     -l, --limit <n>            Max ads per search
     -s, --sort <sort>          Sort results: price-asc, price-desc, date

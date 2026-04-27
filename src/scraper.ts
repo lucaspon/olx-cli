@@ -98,10 +98,13 @@ export async function fetchAds(options: SearchOptions): Promise<Ad[]> {
 
       const title = raw.subject || 'No title'
 
-      // Exclude ads whose titles contain the filter substring (case-insensitive)
-      if (options.filterSubstring) {
-        const needle = options.filterSubstring.toLowerCase()
-        if (title.toLowerCase().includes(needle)) {
+      // Exclude ads whose titles contain any filter substring (case-insensitive)
+      if (options.filterSubstrings && options.filterSubstrings.length > 0) {
+        const lowerTitle = title.toLowerCase()
+        const shouldExclude = options.filterSubstrings.some((needle) =>
+          lowerTitle.includes(needle.toLowerCase())
+        )
+        if (shouldExclude) {
           continue
         }
       }
