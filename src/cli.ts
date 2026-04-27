@@ -48,7 +48,7 @@ const program = new Command()
 program
   .name('olx-cli')
   .description('Search OLX Brazil ads from the command line')
-  .version('1.0.0')
+  .version('1.1.0')
 
 program
   .command('search [query]')
