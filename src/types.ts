@@ -29,5 +29,6 @@ export interface RawOlxAd {
   url?: string
   location?: string
   thumbnail?: string
+  images?: { original?: string; originalWebp?: string }[]
   date?: number
 }

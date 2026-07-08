@@ -34,6 +34,54 @@ function getRandomFingerprint(): [string, string] {
   return JA3_FINGERPRINTS[Math.floor(Math.random() * JA3_FINGERPRINTS.length)] as [string, string]
 }
 
+const RSC_CHUNK_RE = /self\.__next_f\.push\(\[1,("(?:[^"\\]|\\.)*")\]\)/g
+
+function extractBalancedArray(str: string, start: number): string | null {
+  let depth = 0
+  for (let i = start; i < str.length; i++) {
+    if (str[i] === '[') depth++
+    else if (str[i] === ']') {
+      depth--
+      if (depth === 0) return str.slice(start, i + 1)
+    }
+  }
+  return null
+}
+
+// OLX's search page is a Next.js App Router page that streams its props as
+// React Server Component chunks (`self.__next_f.push([1, "..."])`) instead of
+// the single `__NEXT_DATA__` script tag used by the old Pages Router. The ad
+// list shows up as a plain `"ads":[...]` JSON array inside one of those chunks.
+function extractRawAds(html: string): RawOlxAd[] | null {
+  for (const match of html.matchAll(RSC_CHUNK_RE)) {
+    let decoded: string
+    try {
+      decoded = JSON.parse(match[1])
+    } catch {
+      continue
+    }
+
+    const key = '"ads":'
+    const keyIdx = decoded.indexOf(key)
+    if (keyIdx === -1) continue
+
+    const arrStart = decoded.indexOf('[', keyIdx + key.length)
+    if (arrStart === -1) continue
+
+    const arrStr = extractBalancedArray(decoded, arrStart)
+    if (!arrStr) continue
+
+    try {
+      const ads = JSON.parse(arrStr)
+      if (Array.isArray(ads)) return ads
+    } catch {
+      continue
+    }
+  }
+
+  return null
+}
+
 interface CycleTLSResponse {
   status: number
   text(): Promise<string>
@@ -80,16 +128,12 @@ export async function fetchAds(options: SearchOptions): Promise<Ad[]> {
 
     const html = await fetchPage(pageUrl)
 
-    // Extract __NEXT_DATA__ script
-    const match = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/)
-    if (!match) {
+    const rawAds = extractRawAds(html)
+    if (rawAds === null) {
       throw new Error('Could not find ad data on the page. OLX may have changed their layout.')
     }
 
-    const data = JSON.parse(match[1])
-    const rawAds: RawOlxAd[] = data?.props?.pageProps?.ads || []
-
-    if (!Array.isArray(rawAds) || rawAds.length === 0) {
+    if (rawAds.length === 0) {
       break
     }
 
@@ -115,7 +159,7 @@ export async function fetchAds(options: SearchOptions): Promise<Ad[]> {
         price: parsePrice(raw.price),
         url: raw.url || '',
         location: raw.location,
-        thumbnail: raw.thumbnail,
+        thumbnail: raw.thumbnail || raw.images?.[0]?.original,
         createdAt: raw.date ? new Date(raw.date * 1000).toISOString() : undefined,
       }
 
